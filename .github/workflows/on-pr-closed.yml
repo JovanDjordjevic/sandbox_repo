@@ -55,11 +55,21 @@ jobs:
         if: github.event.pull_request.merged == true
         run: sed -E -i 's/version="[0-9]+\.[0-9]+\.[0-9]+"/version="${{ steps.calculate-new-package-version.outputs.new-version-number }}"/' .projenrc.py
       # - run: npx projen
+
+      - name: Get token for gh app Token
+        id: get_workflow_token
+        uses: peter-murray/workflow-application-token-action@v3
+        with:
+          application_id: ${{ env.AUTOCOMMIT_APP_ID }}
+          application_private_key: ${{ secrets.AUTOCOMMIT_APP_PRIVATE_KEY }}
+
       - name: Commit automatic version bump
         if: github.event.pull_request.merged == true
+        env:
+          GITHUB_TOKEN: ${{ steps.get_workflow_token.outputs.token }}
         run: |-
-          git config user.name 'github-actions'
-          git config user.email 'github-actions@github.com'
+          git config user.name 'autocommit app'
+          git config user.email 'autocommit-app@placeholder.com'
           git add .
           git commit -m "chore: update version number (automated)"
           git push
